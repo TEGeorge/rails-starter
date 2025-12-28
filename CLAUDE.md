@@ -154,6 +154,18 @@ git commit -m "Add user email validation"
 - **Fast debugging** - Small commits are easy to bisect
 - **Confidence** - You know it works before pushing
 
+### Pre-commit Hook (Automatic Enforcement)
+
+A pre-commit hook is installed automatically by `bin/setup` that runs `bin/ci` before every commit:
+
+- **Located**: `.githooks/pre-commit`
+- **Installed by**: `bin/setup` (configures `git config core.hooksPath .githooks`)
+- **What it does**: Runs full CI pipeline (linting, tests, security scans)
+- **On failure**: Commit is blocked until issues are fixed
+- **Bypass** (NOT RECOMMENDED): `git commit --no-verify`
+
+This hook ensures you can't accidentally commit code that doesn't pass CI.
+
 ## Common Development Tasks
 
 ### Getting Started
@@ -277,6 +289,12 @@ kamal app logs
 
 ### Adding New Features
 
+**Authentication (Rails 8 Built-in):**
+```bash
+rails generate authentication
+rails db:migrate
+```
+
 **Model:**
 ```bash
 rails generate model User name:string email:string
@@ -349,7 +367,7 @@ This is an **opinionated starter template** designed to be forked for new Rails 
 ✅ Landing page example
 
 ### What's NOT Included (Add as Needed)
-❌ Authentication system (add Devise, Rodauth, or custom)
+❌ Authentication system (use `rails generate authentication`)
 ❌ Domain models (build your own)
 ❌ Authorization (add Pundit, CanCanCan, or custom)
 ❌ Admin interface (add Rails Admin, ActiveAdmin, or custom)
@@ -387,7 +405,7 @@ A: No. This template is opinionated. Stick with SQLite. It reduces operational c
 A: Solid Queue/Cache/Cable use SQLite. No external services means simpler deployments, fewer failure points, and lower costs. Redis is overkill for most apps.
 
 **Q: How do I add authentication?**
-A: Add Devise (`gem 'devise'`), run `rails generate devise:install`, then `rails generate devise User`. Or build custom auth - it's simpler than you think.
+A: Use the built-in Rails 8 authentication generator: `rails generate authentication`. This creates a lightweight, Rails-native auth system. Alternatively, use Devise or Rodauth for more features, or build custom auth.
 
 **Q: Why Minitest < 6?**
 A: Version constraint added for compatibility (see `Gemfile`).
