@@ -2,6 +2,28 @@
 
 This repository is based on the Rails Starter Template - a modern Rails 8.1.1 application configured with production-ready tooling and best practices.
 
+## Philosophy: Clean, Pure Rails
+
+This template is **opinionated by design**:
+
+- **SQLite for everything** - No PostgreSQL, no MySQL. SQLite in development, test, AND production.
+- **Solid Queue/Cache/Cable** - No Redis, no external services. Keep it simple.
+- **Kamal deployments** - Docker-based, zero-downtime, the Rails 8 way.
+- **Minimal 3rd party integrations** - Prefer Rails built-ins, avoid external dependencies.
+- **Pure Rails approach** - Use the framework, don't fight it.
+
+**Don't deviate from this stack.** It's designed for maintainability, simplicity, and operational ease.
+
+### Why This Stack?
+
+- **Operational Simplicity** - No Redis to manage, no PostgreSQL to configure. Deploy anywhere Docker runs.
+- **Lower Costs** - No external service bills. Your database, cache, and queue are files on disk.
+- **Faster Deployments** - Fewer moving parts means faster CI/CD and simpler infrastructure.
+- **Easier Debugging** - Everything is in one place. No distributed system complexity.
+- **Production Ready** - Rails 8 made SQLite production-grade. Trust the framework.
+
+This isn't a prototype stack. It's **designed for production**.
+
 ## Repository Structure
 
 ```
@@ -54,13 +76,15 @@ rails-starter/
   - **Import Maps**: ESM modules without bundling
 - **Asset Pipeline**: Propshaft (modern replacement for Sprockets)
 
-### Production Infrastructure
+### Production Infrastructure (No External Services)
 - **Web Server**: Puma (3 threads by default)
 - **HTTP Proxy**: Thruster (asset caching, compression, X-Sendfile)
-- **Background Jobs**: Solid Queue (SQLite-backed)
-- **Caching**: Solid Cache (SQLite-backed)
-- **WebSockets**: Solid Cable (SQLite-backed)
-- **Deployment**: Kamal (Docker-based, zero-downtime)
+- **Background Jobs**: Solid Queue (SQLite-backed) - **No Redis, No Sidekiq**
+- **Caching**: Solid Cache (SQLite-backed) - **No Redis, No Memcached**
+- **WebSockets**: Solid Cable (SQLite-backed) - **No Redis, No ActionCable with Redis**
+- **Deployment**: Kamal (Docker-based, zero-downtime) - **The only way**
+
+**All infrastructure uses SQLite. No external services required.**
 
 ### Testing & Quality
 - **Test Framework**: Minitest (< 6.0)
@@ -70,6 +94,65 @@ rails-starter/
   - Brakeman (Rails vulnerabilities)
   - Bundler-audit (gem vulnerabilities)
   - Importmap audit (JS dependencies)
+
+## Development Workflow (MANDATORY)
+
+This template enforces a **test-driven, early-commit workflow**:
+
+### The Golden Rule: Every Commit Must Have a Test
+
+1. **Write the test first** - Before implementing any feature or fix
+2. **Watch it fail** - Confirm the test catches the issue
+3. **Write the implementation** - Make the test pass
+4. **Run `bin/ci`** - **ALWAYS** before committing
+5. **Commit early, commit often** - Small, focused commits with passing tests
+
+### Commit Workflow (Required Steps)
+
+```bash
+# 1. Write your test
+# test/models/user_test.rb
+
+# 2. Run the test (should fail)
+rails test test/models/user_test.rb
+
+# 3. Implement the feature
+# app/models/user.rb
+
+# 4. Run the test (should pass)
+rails test test/models/user_test.rb
+
+# 5. Run full CI pipeline (REQUIRED)
+bin/ci
+
+# 6. If CI passes, commit
+git add .
+git commit -m "Add user email validation"
+
+# 7. If CI fails, fix and repeat from step 4
+```
+
+### CI Requirements
+
+- **`bin/ci` must pass** before every commit
+- No exceptions for "quick fixes"
+- No commits without tests
+- No skipping linting or security checks
+
+**If `bin/ci` fails, your code is not ready to commit.**
+
+### Commit Message Guidelines
+
+- Use conventional commit format: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`
+- Be specific: "Add user email validation" not "Update user model"
+- Reference tests: "Add user authentication (test: test/models/user_test.rb)"
+
+### Why This Workflow?
+
+- **Prevents regressions** - Every change is verified
+- **Maintains quality** - No broken code in git history
+- **Fast debugging** - Small commits are easy to bisect
+- **Confidence** - You know it works before pushing
 
 ## Common Development Tasks
 
@@ -153,11 +236,13 @@ kamal app logs
 - Keep controllers thin, models fat
 - Use concerns for shared behavior
 
-### Database
-- **Default**: SQLite3 for all environments
+### Database (SQLite Only)
+- **SQLite3 for ALL environments** - Development, test, production
+- **No PostgreSQL, No MySQL** - Stick with SQLite
 - **Production**: Separate SQLite databases for cache, queue, and cable
 - Always create migrations for schema changes
-- Use `rails db:migrate` before running tests
+- Run `rails db:migrate` before running tests
+- SQLite is powerful enough for most applications - don't overcomplicate
 
 ### Frontend
 - **Tailwind CSS**: Use utility classes, avoid custom CSS when possible
@@ -165,17 +250,22 @@ kamal app logs
 - **Stimulus**: Use for interactive components
 - **Import Maps**: Add JS packages via `bin/importmap pin <package>`
 
-### Testing
+### Testing (Required for Every Commit)
+- **Every commit needs a test** - No exceptions
+- **Write tests first** - TDD approach
 - **Controllers**: Test HTTP responses and business logic
 - **Models**: Test validations, associations, and methods
 - **System Tests**: Test critical user flows end-to-end
 - **Parallel Tests**: Tests run in parallel by default (see `test_helper.rb`)
 
-### Git Workflow
-- Work on feature branches
-- Run `bin/ci` before committing
-- CI must pass before merging
-- Follow conventional commit messages
+### Git Workflow (Mandatory Process)
+- **ALWAYS run `bin/ci` before every commit** - Non-negotiable
+- Work on feature branches (never commit directly to main)
+- Commit early and often (small, focused commits)
+- Every commit must have a passing test
+- Follow conventional commit format (`feat:`, `fix:`, `refactor:`, etc.)
+- CI must pass before merging to main
+- If `bin/ci` fails, fix before committing
 
 ### Security
 - Review Brakeman warnings before deploying
@@ -243,27 +333,36 @@ Run before committing:
 
 ## Starter Template Characteristics
 
-This is a **generic starter template** designed to be forked. It includes:
+This is an **opinionated starter template** designed to be forked for new Rails applications.
 
 ### What's Included
-✅ Modern Rails 8 setup with Tailwind CSS
-✅ Production-ready deployment (Kamal + Docker)
-✅ Comprehensive CI/CD pipeline
-✅ Security scanning automation
-✅ PWA support (manifest, service worker)
-✅ Background jobs, caching, WebSockets (Solid*)
+✅ Modern Rails 8.1.1 with Ruby 3.2.9
+✅ SQLite for all environments (dev, test, production)
+✅ Solid Queue/Cache/Cable (no external services)
+✅ Tailwind CSS + Turbo + Stimulus
+✅ Kamal deployment configuration
+✅ Comprehensive CI/CD pipeline (GitHub Actions + `bin/ci`)
+✅ Security scanning automation (Brakeman, Bundler-audit)
 ✅ System tests with Capybara
+✅ RuboCop with Rails Omakase style
+✅ PWA support ready
 ✅ Landing page example
 
-### What's NOT Included (By Design)
+### What's NOT Included (Add as Needed)
 ❌ Authentication system (add Devise, Rodauth, or custom)
 ❌ Domain models (build your own)
 ❌ Authorization (add Pundit, CanCanCan, or custom)
 ❌ Admin interface (add Rails Admin, ActiveAdmin, or custom)
 ❌ API versioning (add when needed)
-❌ External services (Redis, PostgreSQL, etc.)
 
-**Philosophy**: Start lean, add what you need.
+### What You Should NOT Add
+🚫 PostgreSQL or MySQL (stick with SQLite)
+🚫 Redis or Memcached (use Solid Queue/Cache/Cable)
+🚫 Alternative deployment tools (Kamal is the standard)
+🚫 Complex build pipelines (Import Maps are enough)
+🚫 Unnecessary 3rd party services
+
+**Philosophy**: Start lean, stay pure Rails, add only what you truly need.
 
 ## Working with Forked Repositories
 
@@ -278,31 +377,46 @@ When working with a repository forked from this template:
 
 ## Common Questions
 
-**Q: How do I switch from SQLite to PostgreSQL?**
-A: Update `Gemfile` (swap `sqlite3` for `pg`), modify `config/database.yml`, update `Dockerfile` to include libpq-dev.
+**Q: Why SQLite instead of PostgreSQL?**
+A: Simplicity. SQLite is powerful, requires no external services, and scales further than most think. Rails 8 made it production-ready. Don't switch unless you have a specific, measured need.
+
+**Q: Can I use PostgreSQL/MySQL instead?**
+A: No. This template is opinionated. Stick with SQLite. It reduces operational complexity and keeps deployments simple.
+
+**Q: Why no Redis?**
+A: Solid Queue/Cache/Cable use SQLite. No external services means simpler deployments, fewer failure points, and lower costs. Redis is overkill for most apps.
 
 **Q: How do I add authentication?**
-A: Add Devise (`gem 'devise'`), run `rails generate devise:install`, then `rails generate devise User`.
+A: Add Devise (`gem 'devise'`), run `rails generate devise:install`, then `rails generate devise User`. Or build custom auth - it's simpler than you think.
 
 **Q: Why Minitest < 6?**
 A: Version constraint added for compatibility (see `Gemfile`).
 
 **Q: How do I add a new JavaScript package?**
-A: Use `bin/importmap pin <package>` (e.g., `bin/importmap pin chart.js`).
+A: Use `bin/importmap pin <package>` (e.g., `bin/importmap pin chart.js`). Keep JavaScript minimal.
 
-**Q: How do I deploy?**
-A: Configure `config/deploy.yml`, ensure Docker is installed on target server, run `kamal setup` then `kamal deploy`.
+**Q: How do I deploy with Kamal?**
+A: Configure `config/deploy.yml`, ensure Docker is installed on target server, run `kamal setup` then `kamal deploy`. Kamal is the only supported deployment method.
 
-**Q: Can I use Redis instead of Solid Queue/Cache/Cable?**
-A: Yes, uncomment Redis configuration in `config/environments/production.rb` and update `config/cable.yml`, `config/cache.yml`.
+**Q: Do I really need to run `bin/ci` before every commit?**
+A: **Yes.** Non-negotiable. It prevents broken code from entering the repository and maintains quality standards.
+
+**Q: Can I skip writing tests for small changes?**
+A: **No.** Every commit needs a test. "Small changes" cause bugs too. Write the test.
 
 ## Tips for Claude
 
+### Mandatory Practices
+- **ALWAYS run `bin/ci` before every commit** - This is non-negotiable
+- **Write tests first** - Every feature, every fix, every change
+- **Commit early and often** - Small, focused commits with passing tests
+- Every commit must include a test that verifies the change
+
+### Development Best Practices
 - Always run `bin/setup` after cloning
-- Use `bin/dev` for development (not `rails s`)
-- Run `bin/ci` before committing changes
+- Use `bin/dev` for development (never `rails s`)
 - Check existing tests for patterns before writing new ones
-- Follow Rails conventions (don't fight the framework)
+- Follow Rails Omakase conventions (don't fight the framework)
 - Keep Tailwind CSS utility classes in views (avoid custom CSS)
 - Use Turbo for dynamic updates (avoid full page reloads)
 - Add Stimulus controllers for interactive components
@@ -310,6 +424,20 @@ A: Yes, uncomment Redis configuration in `config/environments/production.rb` and
 - Keep controllers RESTful when possible
 - Use concerns for shared model/controller behavior
 
+### Tech Stack Enforcement
+- **Never suggest switching to PostgreSQL** - SQLite is the choice
+- **Never suggest adding Redis** - Solid Queue/Cache/Cable only
+- **Never suggest alternative deployment methods** - Kamal only
+- Minimize 3rd party gems - prefer Rails built-ins
+- Keep the stack pure and simple
+
+### Quality Gates
+- If `bin/ci` fails, **do not commit**
+- If tests are missing, **write them first**
+- If RuboCop complains, **fix it**
+- If Brakeman warns, **address it**
+- No shortcuts, no exceptions
+
 ---
 
-**This template is designed to be adapted.** Remove what you don't need, add what you do. The goal is to start with solid foundations while maintaining flexibility for your specific product requirements.
+**This template is opinionated by design.** The constraints exist to maintain simplicity, quality, and operational ease. Stick with the stack, follow the workflow, and you'll build maintainable Rails applications.
