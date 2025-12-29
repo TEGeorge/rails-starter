@@ -1,19 +1,24 @@
-<%= render "helpers/alert" %>
+<div class="card">
+  <div class="card-body">
 
-<h1 class="font-bold text-4xl">Forgot your password?</h1>
+    <%= render "helpers/alert" %>
 
-<%= form_with url: passwords_path, class: "contents" do |form| %>
-  <div class="my-5">
-    <%= form.email_field :email_address,
-                     required: true,
-                     autofocus: true,
-                     autocomplete: "username",
-                     placeholder: "Enter your email address",
-                     value: params[:email_address],
-                     class: "input w-full" %>
+    <h1 class="font-bold text-4xl">Forgot your password?</h1>
+
+    <%= form_with url: passwords_path, class: "contents" do |form| %>
+      <div class="my-5">
+        <%= form.email_field :email_address,
+                         required: true,
+                         autofocus: true,
+                         autocomplete: "username",
+                         placeholder: "Enter your email address",
+                         value: params[:email_address],
+                         class: "input w-full" %>
+      </div>
+
+      <div class="inline">
+        <%= form.submit "Email reset instructions", class: "input w-full" %>
+      </div>
+    <% end %>
   </div>
-
-  <div class="inline">
-    <%= form.submit "Email reset instructions", class: "input w-full" %>
-  </div>
-<% end %>
+</div>
