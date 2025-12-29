@@ -6,5 +6,5 @@
 
 /* Optional for custom themes – Docs: https://daisyui.com/docs/themes/#how-to-add-a-new-custom-theme */
 @plugin "./daisyui-theme.mjs"{
-  /* custom theme here */
+  themes: light --default, dark --prefersdark;
 }
