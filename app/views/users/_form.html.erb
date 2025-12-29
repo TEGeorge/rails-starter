@@ -1,0 +1,13 @@
+<%= render "helpers/alert" %>
+<%= form_with model: @user, url: register_path, class: "fieldset" do |form| %>
+  <%= form.label :email_address, class: "label" %>
+  <%= form.email_field :email_address, class: "input w-full" %>
+
+  <%= form.label :password, class: "label" %>
+  <%= form.password_field :password, class: "input w-full" %>
+
+  <%= form.label :password_confirmation, class: "label" %>
+  <%= form.password_field :password_confirmation, class: "input w-full" %>
+
+  <%= form.submit class: "btn btn-primary" %>
+<% end %>
