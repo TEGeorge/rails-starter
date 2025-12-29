@@ -18,25 +18,7 @@ class UsersController < ApplicationController
       redirect_to signup_path, alert: "Failed to create user"
   end
   private
-    # Using a private method to encapsulate the permitted parameters is a good
-    # pattern. You can use the same list for both create and update.
     def user_params
       params.require(:user).permit(:email_address, :password, :password_confirmation)
     end
 end
-
-# def create
-#   @user = User.new(user_params)
-#
-#   if @user.save
-#     redirect_to @user, notice: "User created successfully"
-#   else
-#     render :new, status: :unprocessable_entity
-#   end
-# end
-#
-# private
-#
-# def user_params
-#   params.require(:user).permit(:email, :password, :password_confirmation)
-# end
