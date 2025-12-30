@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Pre-commit hook that runs bin/ci to ensure code quality before committing
+# This enforces the mandatory workflow: all commits must pass CI checks
+
+puts "\n🔍 Running pre-commit checks via bin/ci...\n\n"
+
+# Run bin/ci and capture the exit status
+system("bin/ci")
+exit_status = $?.exitstatus
+
+if exit_status.zero?
+  puts "\n✅ Pre-commit checks passed! Proceeding with commit.\n"
+  exit 0
+else
+  puts "\n❌ Pre-commit checks failed!"
+  puts "   Fix the issues above and try again."
+  puts "   To bypass this check (NOT RECOMMENDED): git commit --no-verify\n"
+  exit 1
+end
