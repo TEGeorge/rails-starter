@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  resource :session
+  resources :passwords, param: :token
+  get "login" => "sessions#new", as: :login
+  get "signup" => "users#new", as: :signup
+  post "register" => "users#create", as: :register
+  get "logout" => "sessions#destroy", as: :logout
   get "landing/index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

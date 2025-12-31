@@ -1,0 +1,67 @@
+<%= render "helpers/alert" %>
+
+<% if @user.errors.any? %>
+  <div role="alert" class="alert alert-error mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <h3 class="font-bold"><%= pluralize(@user.errors.count, "error") %> prohibited this user from being saved:</h3>
+      <ul class="list-disc list-inside">
+        <% @user.errors.full_messages.each do |message| %>
+          <li class="error-message"><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+<% end %>
+
+<%= form_with model: @user, url: register_path, class: "fieldset" do |form| %>
+  <div class="form-control">
+    <%= form.label :email_address, class: "label" %>
+    <%= form.email_field :email_address,
+      required: true,
+      type: "email",
+      placeholder: "user@example.com",
+      class: "input w-full #{@user.errors[:email_address].any? ? 'input-error' : ''}" %>
+    <% if @user.errors[:email_address].any? %>
+      <label class="label">
+        <span class="label-text-alt text-error error-message"><%= @user.errors[:email_address].first %></span>
+      </label>
+    <% end %>
+  </div>
+
+  <div class="form-control">
+    <%= form.label :password, class: "label" %>
+    <%= form.password_field :password,
+      required: true,
+      minlength: 12,
+      placeholder: "At least 12 characters",
+      class: "input w-full #{@user.errors[:password].any? ? 'input-error' : ''}" %>
+    <% if @user.errors[:password].any? %>
+      <label class="label">
+        <span class="label-text-alt text-error error-message"><%= @user.errors[:password].first %></span>
+      </label>
+    <% else %>
+      <label class="label">
+        <span class="label-text-alt">Minimum 12 characters</span>
+      </label>
+    <% end %>
+  </div>
+
+  <div class="form-control">
+    <%= form.label :password_confirmation, class: "label" %>
+    <%= form.password_field :password_confirmation,
+      required: true,
+      minlength: 12,
+      placeholder: "Confirm your password",
+      class: "input w-full #{@user.errors[:password_confirmation].any? ? 'input-error' : ''}" %>
+    <% if @user.errors[:password_confirmation].any? %>
+      <label class="label">
+        <span class="label-text-alt text-error error-message"><%= @user.errors[:password_confirmation].first %></span>
+      </label>
+    <% end %>
+  </div>
+
+  <%= form.submit class: "btn btn-primary" %>
+<% end %>
