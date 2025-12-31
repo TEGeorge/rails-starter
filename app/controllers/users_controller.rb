@@ -12,10 +12,8 @@ class UsersController < ApplicationController
       start_new_session_for @user
       redirect_to after_authentication_url, notice: "User created successfully"
     else
-      redirect_to signup_path, alert: "Failed to create user"
+      render :new, status: :unprocessable_entity
     end
-  rescue
-      redirect_to signup_path, alert: "Failed to create user"
   end
   private
     def user_params

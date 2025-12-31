@@ -57,9 +57,8 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to signup_path
-    follow_redirect!
-    assert_equal "Failed to create user", flash[:alert]
+    assert_response :unprocessable_entity
+    assert_select ".error-message"
   end
 
   test "should not create user with duplicate email address" do
@@ -81,9 +80,8 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to signup_path
-    follow_redirect!
-    assert_equal "Failed to create user", flash[:alert]
+    assert_response :unprocessable_entity
+    assert_select ".error-message"
   end
 
   test "should not create user without email address" do
@@ -97,9 +95,8 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to signup_path
-    follow_redirect!
-    assert_equal "Failed to create user", flash[:alert]
+    assert_response :unprocessable_entity
+    assert_select ".error-message"
   end
 
   test "should not create user without password" do
@@ -113,9 +110,8 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to signup_path
-    follow_redirect!
-    assert_equal "Failed to create user", flash[:alert]
+    assert_response :unprocessable_entity
+    assert_select ".error-message"
   end
 
   test "should handle duplicate email with different case" do
@@ -137,8 +133,74 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to signup_path
-    follow_redirect!
-    assert_equal "Failed to create user", flash[:alert]
+    assert_response :unprocessable_entity
+    assert_select ".error-message"
+  end
+
+  test "should render form with errors on validation failure" do
+    assert_no_difference("User.count") do
+      post register_path, params: {
+        user: {
+          email_address: "",
+          password: "password123",
+          password_confirmation: "password123"
+        }
+      }
+    end
+
+    # Should render the form, not redirect
+    assert_response :unprocessable_entity
+    # Should show validation errors
+    assert_select ".error-message", minimum: 1
+  end
+
+  test "should reject invalid email format" do
+    assert_no_difference("User.count") do
+      post register_path, params: {
+        user: {
+          email_address: "notanemail",
+          password: "SecurePassword123!",
+          password_confirmation: "SecurePassword123!"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select ".error-message"
+  end
+
+  test "should reject email without domain" do
+    assert_no_difference("User.count") do
+      post register_path, params: {
+        user: {
+          email_address: "user@",
+          password: "SecurePassword123!",
+          password_confirmation: "SecurePassword123!"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "should accept valid email formats" do
+    valid_emails = [
+      "user@example.com",
+      "user.name@example.com",
+      "user+tag@example.co.uk",
+      "user_name@example-domain.com"
+    ]
+
+    valid_emails.each do |email|
+      assert_difference("User.count", 1) do
+        post register_path, params: {
+          user: {
+            email_address: email,
+            password: "SecurePassword123!",
+            password_confirmation: "SecurePassword123!"
+          }
+        }
+      end
+    end
   end
 end
