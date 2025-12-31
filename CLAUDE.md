@@ -104,42 +104,67 @@ This template enforces a **test-driven, early-commit workflow**:
 1. **Write the test first** - Before implementing any feature or fix
 2. **Watch it fail** - Confirm the test catches the issue
 3. **Write the implementation** - Make the test pass
-4. **Run `bin/ci`** - **ALWAYS** before committing
-5. **Commit early, commit often** - Small, focused commits with passing tests
+4. **Verify tests pass** - Run the specific test file to confirm
+5. **Commit** - Pre-commit hook automatically runs `bin/ci`
+6. **Commit early, commit often** - Small, focused commits with passing tests
 
 ### Commit Workflow (Required Steps)
 
 ```bash
-# 1. Write your test
-# test/models/user_test.rb
+# 1. Write your test first
+# test/controllers/users_controller_test.rb
 
-# 2. Run the test (should fail)
-rails test test/models/user_test.rb
+# 2. Run the test (should fail - Red)
+bin/rails test test/controllers/users_controller_test.rb
+# Expected: Failure confirming test catches the issue
 
-# 3. Implement the feature
+# 3. Implement the feature (Green)
 # app/models/user.rb
+# app/controllers/users_controller.rb
 
-# 4. Run the test (should pass)
-rails test test/models/user_test.rb
+# 4. Run the test again (should pass)
+bin/rails test test/controllers/users_controller_test.rb
 
-# 5. Run full CI pipeline (REQUIRED)
-bin/ci
-
-# 6. If CI passes, commit
+# 5. Commit changes (pre-commit hook runs bin/ci automatically)
 git add .
-git commit -m "Add user email validation"
+git commit -m "feat: Add email format validation to user signup"
+# Hook runs: RuboCop, Brakeman, tests, security audits
+# If hook fails: Fix issues and try again
+# If hook passes: Commit succeeds
 
-# 7. If CI fails, fix and repeat from step 4
+# The pre-commit hook at .githooks/pre-commit automatically runs bin/ci
+# No need to run bin/ci manually before commits
+```
+
+**Example commit flow from this project:**
+```bash
+# 1. Wrote tests for email validation (12 tests)
+bin/rails test test/controllers/users_controller_test.rb
+# 3 failures, 7 errors - good, tests catch missing feature
+
+# 2. Added email format validation to User model
+# 3. Updated controller to render errors instead of redirect
+# 4. Added error display to form
+
+# 5. Tests pass
+bin/rails test test/controllers/users_controller_test.rb
+# 12 runs, 51 assertions, 0 failures
+
+# 6. Commit (pre-commit hook runs bin/ci)
+git add .
+git commit -m "refactor: Improve signup flow error handling"
+# ✅ Pre-commit checks passed! Proceeding with commit.
 ```
 
 ### CI Requirements
 
-- **`bin/ci` must pass** before every commit
-- No exceptions for "quick fixes"
+- **Pre-commit hook runs `bin/ci` automatically** on every commit
+- Hook runs: RuboCop (linting), Brakeman (security), all tests, gem audits
+- **If hook fails, commit is blocked** - fix issues and try again
 - No commits without tests
-- No skipping linting or security checks
+- No bypassing the hook (avoid `--no-verify`)
 
-**If `bin/ci` fails, your code is not ready to commit.**
+**The pre-commit hook ensures code quality.** If it fails, fix the issues before committing.
 
 ### Commit Message Guidelines
 
@@ -264,13 +289,21 @@ This is an **opinionated starter template** designed to be forked for new Rails 
 ✅ RuboCop with Rails Omakase style
 ✅ PWA support ready
 ✅ Landing page example
+✅ **Authentication system** (email/password with sessions)
+  - User model with `has_secure_password`
+  - Email normalization (lowercase, trimmed)
+  - Email format validation (`URI::MailTo::EMAIL_REGEXP`)
+  - Session management (cookie-based, SQLite-backed)
+  - Password reset flow
+  - Rate limiting on signup (10 attempts per 3 minutes)
 
 ### What's NOT Included (Add as Needed)
-❌ Authentication system (use `rails generate authentication`)
-❌ Domain models (build your own)
+❌ Domain models beyond User (build your own)
 ❌ Authorization (add Pundit, CanCanCan, or custom)
 ❌ Admin interface (add Rails Admin, ActiveAdmin, or custom)
 ❌ API versioning (add when needed)
+❌ OAuth/Social login (add OmniAuth if needed)
+❌ Two-factor authentication (add as needed)
 
 ### What You Should NOT Add
 🚫 PostgreSQL or MySQL (stick with SQLite)
@@ -284,9 +317,10 @@ This is an **opinionated starter template** designed to be forked for new Rails 
 ## Tips for Claude
 
 ### Mandatory Practices
-- **ALWAYS run `bin/ci` before every commit** - This is non-negotiable
-- **Write tests first** - Every feature, every fix, every change
+- **Write tests first** - Every feature, every fix, every change (TDD)
+- **Verify tests pass** - Run test file before committing
 - **Commit early and often** - Small, focused commits with passing tests
+- **Let pre-commit hook run** - It automatically runs `bin/ci` (don't bypass with `--no-verify`)
 - Every commit must include a test that verifies the change
 
 ### Development Best Practices
@@ -301,6 +335,92 @@ This is an **opinionated starter template** designed to be forked for new Rails 
 - Keep controllers RESTful when possible
 - Use concerns for shared model/controller behavior
 
+### Testing Patterns
+
+**Follow TDD workflow:**
+1. Write test first (it should fail)
+2. Implement feature (test should pass)
+3. Run `bin/ci` before committing
+
+**Controller test patterns:**
+```ruby
+# Test successful creation
+test "should create resource" do
+  assert_difference("Resource.count", 1) do
+    post resources_path, params: { resource: valid_params }
+  end
+  assert_redirected_to resource_path(Resource.last)
+end
+
+# Test validation failures
+test "should not create invalid resource" do
+  assert_no_difference("Resource.count") do
+    post resources_path, params: { resource: invalid_params }
+  end
+  assert_response :unprocessable_entity
+end
+```
+
+**Model validation patterns:**
+```ruby
+# Use comprehensive validations
+validates :email_address,
+  presence: true,
+  uniqueness: true,
+  format: { with: URI::MailTo::EMAIL_REGEXP }
+```
+
+**Common anti-patterns to avoid:**
+- ❌ Bare `rescue` statements (catches all exceptions, hides bugs)
+- ❌ Redirecting on validation failure (loses form data)
+- ❌ Generic error messages (doesn't help users)
+- ❌ Missing email format validation (accepts invalid emails)
+- ❌ Unused template files (if controller always redirects)
+
+### Authentication System
+
+**Current implementation:**
+- **User model** (`app/models/user.rb`)
+  - Uses `has_secure_password` for password encryption
+  - Email normalization: `normalizes :email_address, with: ->(e) { e.strip.downcase }`
+  - Validations: presence, uniqueness, format (URI::MailTo::EMAIL_REGEXP)
+
+- **Controllers:**
+  - `UsersController` - signup/registration with rate limiting
+  - `SessionsController` - login/logout
+  - `PasswordsController` - password reset flow
+
+- **Session management:**
+  - Cookie-based (signed, permanent, httponly, same_site: :lax)
+  - Session records stored in SQLite (no Redis needed)
+  - `Current.session` for current user context
+  - `start_new_session_for(user)` helper in Authentication concern
+
+**Authentication concern patterns:**
+```ruby
+# In controllers that need auth
+class MyController < ApplicationController
+  # Controller is authenticated by default via before_action
+
+  # To skip auth on specific actions:
+  allow_unauthenticated_access only: %i[ new create ]
+end
+```
+
+**Testing authenticated actions:**
+```ruby
+# Create a user and session in test
+setup do
+  @user = User.create!(email_address: "test@example.com", password: "password")
+  post login_path, params: { email_address: @user.email_address, password: "password" }
+end
+
+test "authenticated action" do
+  get protected_path
+  assert_response :success
+end
+```
+
 ### Tech Stack Enforcement
 - **Never suggest switching to PostgreSQL** - SQLite is the choice
 - **Never suggest adding Redis** - Solid Queue/Cache/Cable only
@@ -309,11 +429,12 @@ This is an **opinionated starter template** designed to be forked for new Rails 
 - Keep the stack pure and simple
 
 ### Quality Gates
-- If `bin/ci` fails, **do not commit**
+- If pre-commit hook fails, **fix issues before committing**
 - If tests are missing, **write them first**
-- If RuboCop complains, **fix it**
-- If Brakeman warns, **address it**
-- No shortcuts, no exceptions
+- If RuboCop complains, **fix it** (pre-commit hook will catch)
+- If Brakeman warns, **address it** (pre-commit hook will catch)
+- If tests fail, **fix them** (pre-commit hook will catch)
+- No shortcuts, no bypassing `--no-verify`, no exceptions
 
 ---
 
