@@ -203,4 +203,28 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
       end
     end
   end
+
+  test "signup form has HTML5 validation attributes" do
+    get signup_path
+
+    # Email field should have required and type="email"
+    assert_select 'input[name="user[email_address]"][required]'
+    assert_select 'input[name="user[email_address]"][type="email"]'
+    assert_select 'input[name="user[email_address]"][placeholder]'
+
+    # Password fields should have required and minlength
+    assert_select 'input[name="user[password]"][required]'
+    assert_select 'input[name="user[password]"][minlength="12"]'
+    assert_select 'input[name="user[password]"][type="password"]'
+
+    assert_select 'input[name="user[password_confirmation]"][required]'
+    assert_select 'input[name="user[password_confirmation]"][minlength="12"]'
+    assert_select 'input[name="user[password_confirmation]"][type="password"]'
+  end
+
+  test "signup form shows password requirements hint" do
+    get signup_path
+
+    assert_select ".label-text-alt", text: "Minimum 12 characters"
+  end
 end

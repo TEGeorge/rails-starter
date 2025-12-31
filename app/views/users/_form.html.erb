@@ -19,7 +19,11 @@
 <%= form_with model: @user, url: register_path, class: "fieldset" do |form| %>
   <div class="form-control">
     <%= form.label :email_address, class: "label" %>
-    <%= form.email_field :email_address, class: "input w-full #{@user.errors[:email_address].any? ? 'input-error' : ''}" %>
+    <%= form.email_field :email_address,
+      required: true,
+      type: "email",
+      placeholder: "user@example.com",
+      class: "input w-full #{@user.errors[:email_address].any? ? 'input-error' : ''}" %>
     <% if @user.errors[:email_address].any? %>
       <label class="label">
         <span class="label-text-alt text-error error-message"><%= @user.errors[:email_address].first %></span>
@@ -29,17 +33,29 @@
 
   <div class="form-control">
     <%= form.label :password, class: "label" %>
-    <%= form.password_field :password, class: "input w-full #{@user.errors[:password].any? ? 'input-error' : ''}" %>
+    <%= form.password_field :password,
+      required: true,
+      minlength: 12,
+      placeholder: "At least 12 characters",
+      class: "input w-full #{@user.errors[:password].any? ? 'input-error' : ''}" %>
     <% if @user.errors[:password].any? %>
       <label class="label">
         <span class="label-text-alt text-error error-message"><%= @user.errors[:password].first %></span>
+      </label>
+    <% else %>
+      <label class="label">
+        <span class="label-text-alt">Minimum 12 characters</span>
       </label>
     <% end %>
   </div>
 
   <div class="form-control">
     <%= form.label :password_confirmation, class: "label" %>
-    <%= form.password_field :password_confirmation, class: "input w-full #{@user.errors[:password_confirmation].any? ? 'input-error' : ''}" %>
+    <%= form.password_field :password_confirmation,
+      required: true,
+      minlength: 12,
+      placeholder: "Confirm your password",
+      class: "input w-full #{@user.errors[:password_confirmation].any? ? 'input-error' : ''}" %>
     <% if @user.errors[:password_confirmation].any? %>
       <label class="label">
         <span class="label-text-alt text-error error-message"><%= @user.errors[:password_confirmation].first %></span>
