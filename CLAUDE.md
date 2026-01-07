@@ -296,6 +296,12 @@ This is an **opinionated starter template** designed to be forked for new Rails 
   - Session management (cookie-based, SQLite-backed)
   - Password reset flow
   - Rate limiting on signup (10 attempts per 3 minutes)
+✅ **Hotwire Native support** (iOS & Android mobile apps)
+  - Hotwire Native Bridge package configured
+  - Path configuration endpoints for iOS and Android
+  - Mobile app detection helpers (turbo_native_app?, turbo_ios_app?, turbo_android_app?)
+  - Cookie-based auth works automatically with mobile apps
+  - See HOTWIRE_NATIVE.md for full mobile app setup guide
 
 ### What's NOT Included (Add as Needed)
 ❌ Domain models beyond User (build your own)
