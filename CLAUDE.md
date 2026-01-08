@@ -205,6 +205,38 @@ bin/dev
 bin/ci
 ```
 
+### Bundler Version Management
+
+The setup script automatically ensures the correct Bundler version is installed.
+
+**Automatic** (recommended):
+```bash
+# bin/setup automatically installs the correct Bundler version from Gemfile.lock
+bin/setup
+```
+
+**Manual** (if needed):
+```bash
+# Install specific Bundler version matching Gemfile.lock
+gem install bundler -v $(grep -A 1 "BUNDLED WITH" Gemfile.lock | tail -n 1 | tr -d ' ')
+
+# Install dependencies with correct Bundler version
+bundle install
+```
+
+**Troubleshooting Bundler errors:**
+```bash
+# If you see "Could not find [gem]" or Bundler version errors:
+# 1. Check which Bundler version is required
+grep -A 1 "BUNDLED WITH" Gemfile.lock
+
+# 2. Install that specific version
+gem install bundler -v 2.4.19  # Replace with version from step 1
+
+# 3. Run setup again
+bin/setup
+```
+
 ### Testing
 ```bash
 # Run all tests
@@ -296,6 +328,12 @@ This is an **opinionated starter template** designed to be forked for new Rails 
   - Session management (cookie-based, SQLite-backed)
   - Password reset flow
   - Rate limiting on signup (10 attempts per 3 minutes)
+✅ **Hotwire Native support** (iOS & Android mobile apps)
+  - Hotwire Native Bridge package configured
+  - Path configuration endpoints for iOS and Android
+  - Mobile app detection helpers (turbo_native_app?, turbo_ios_app?, turbo_android_app?)
+  - Cookie-based auth works automatically with mobile apps
+  - See HOTWIRE_NATIVE.md for full mobile app setup guide
 
 ### What's NOT Included (Add as Needed)
 ❌ Domain models beyond User (build your own)

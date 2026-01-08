@@ -12,7 +12,27 @@ FileUtils.chdir APP_ROOT do
   # This script is idempotent, so that you can run it at any time and get an expectable outcome.
   # Add necessary setup steps to this file.
 
-  puts "== Installing dependencies =="
+  puts "== Checking Bundler version =="
+  # Read the bundled version from Gemfile.lock
+  lockfile = File.read("Gemfile.lock")
+  bundled_with = lockfile.match(/BUNDLED WITH\n\s+(\d+\.\d+\.\d+)/)
+
+  if bundled_with
+    required_version = bundled_with[1]
+    puts "Gemfile.lock requires Bundler #{required_version}"
+
+    # Check if the required version is installed
+    installed_versions = `gem list bundler -i -v #{required_version}`.strip
+
+    unless installed_versions == "true"
+      puts "Installing Bundler #{required_version}..."
+      system!("gem install bundler -v #{required_version}")
+    else
+      puts "Bundler #{required_version} is already installed"
+    end
+  end
+
+  puts "\n== Installing dependencies =="
   system("bundle check") || system!("bundle install")
 
   # puts "\n== Copying sample files =="
