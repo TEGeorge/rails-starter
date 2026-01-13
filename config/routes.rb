@@ -6,6 +6,17 @@ Rails.application.routes.draw do
   post "register" => "users#create", as: :register
   get "logout" => "sessions#destroy", as: :logout
   get "landing/index"
+
+  # Hotwire Native path configuration endpoints
+  namespace :turbo do
+    namespace :ios do
+      resource :path_configuration, only: [ :show ]
+    end
+    namespace :android do
+      resource :path_configuration, only: [ :show ]
+    end
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
